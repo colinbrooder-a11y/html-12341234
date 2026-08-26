@@ -117,6 +117,12 @@
   .thumbs button{font-size:19px;background:#fff;border:1px solid var(--line);border-radius:50%;width:44px;height:44px;cursor:pointer}
   .thumbs button.sel{border-color:var(--accent);background:#F5F8FE}
 
+  
+  .bar{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px}
+  .bar span{width:120px;color:var(--slate)}
+  .bar i{height:14px;background:var(--accent);border-radius:3px;display:block}
+  .bar b{font-weight:600;font-size:12.5px}
+  .bar.dim i{opacity:.35}
   @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -130,6 +136,8 @@
     <button class="on" onclick="setRole('submitter',this)">Submitter</button>
     <button onclick="setRole('supervisor',this)">Supervisor</button>
     <button onclick="setRole('ea',this)">EA Reviewer</button>
+    <button onclick="setRole('bp',this)">Business Partner</button>
+    <button onclick="setRole('coe',this)">CoE</button>
   </div>
 </div>
 
@@ -349,6 +357,87 @@
   </div>
 </div>
 
+
+<!-- ================= COE: ALL USE CASES ================= -->
+<div class="wrap view" id="v-allcases">
+  <h1>All use cases</h1>
+  <p class="sub">The unified datastore, live — every submission, every status. Rows expand to full detail including flags and review reasons.</p>
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <div class="card" style="flex:1;min-width:110px;text-align:center;margin:0;padding:12px"><div style="font-size:22px;font-weight:700">7</div><div class="sub" style="margin:0;font-size:12px">Total</div></div>
+    <div class="card" style="flex:1;min-width:110px;text-align:center;margin:0;padding:12px"><div style="font-size:22px;font-weight:700;color:var(--pending)">3</div><div class="sub" style="margin:0;font-size:12px">In review</div></div>
+    <div class="card" style="flex:1;min-width:110px;text-align:center;margin:0;padding:12px"><div style="font-size:22px;font-weight:700;color:var(--ok)">2</div><div class="sub" style="margin:0;font-size:12px">Hub approved</div></div>
+    <div class="card" style="flex:1;min-width:110px;text-align:center;margin:0;padding:12px"><div style="font-size:22px;font-weight:700;color:var(--warn)">1</div><div class="sub" style="margin:0;font-size:12px">Hub denied</div></div>
+    <div class="card" style="flex:1;min-width:110px;text-align:center;margin:0;padding:12px"><div style="font-size:22px;font-weight:700;color:var(--flag)">1</div><div class="sub" style="margin:0;font-size:12px">Filtered pre-Hub</div></div>
+  </div>
+  <div class="rowlist">
+    <div class="row click" onclick="expandRow('x1')">
+      <div class="rtitle" style="flex:1">Automated low-dollar claim approval<small>John Doe · Claims · Aug 24</small></div>
+      <span class="chip flag">3 flags</span><span class="chip pending">Supervisor pending</span><span style="color:var(--line)">›</span>
+    </div>
+    <div class="row" id="x1" style="display:none;background:#FBFCFD;display:none"><div style="font-size:13px">
+      <b>Flags:</b> AI-AP-01 (PII), AI-AP-02 (external/restricted), AI-AP-03 (automated Claims decisions) — all acknowledged by submitter · <b>Tool:</b> ClaimFlow AI (external) · <b>Full record, transcript, and envelope available to CoE</b></div></div>
+    <div class="row click" onclick="expandRow('x2')">
+      <div class="rtitle" style="flex:1">Claims correspondence triage assistant<small>Sam Rivera · Claims Ops · Aug 12</small></div>
+      <span class="chip ok">Hub approved</span><span style="color:var(--line)">›</span>
+    </div>
+    <div class="row" id="x2" style="display:none;background:#FBFCFD"><div style="font-size:13px">
+      <b>Outcome:</b> approved Aug 20 · 0 flags · human-reviewed design · in approved inventory, BP portfolio</div></div>
+    <div class="row click" onclick="expandRow('x3')">
+      <div class="rtitle" style="flex:1">Employee attrition prediction<small>M. Chen · HR · Aug 15</small></div>
+      <span class="chip warn">Hub denied</span><span style="color:var(--line)">›</span>
+    </div>
+    <div class="row" id="x3" style="display:none;background:#FBFCFD"><div style="font-size:13px">
+      <b>Denied Aug 22:</b> automated employment decisions + fairness criteria undefined (AI-AP-03, GOV-03 cited) · reasons communicated to submitter · retained as demand data</div></div>
+    <div class="row click" onclick="expandRow('x4')">
+      <div class="rtitle" style="flex:1">Billing FAQ virtual assistant<small>L. Park · Policy Svcs · Aug 18</small></div>
+      <span class="chip flag">Filtered: duplicate</span><span style="color:var(--line)">›</span>
+    </div>
+    <div class="row" id="x4" style="display:none;background:#FBFCFD"><div style="font-size:13px">
+      <b>Duplicate</b> of "Claims correspondence triage assistant" (similarity 0.84) · submitter linked &amp; closed during intake</div></div>
+  </div>
+  <p class="sub" style="margin-top:10px;font-size:12px">Demo shows 4 of 7 rows · live version: filters by status, BU, date; full record on expand.</p>
+</div>
+
+<!-- ================= PORTFOLIO ANALYTICS ================= -->
+<div class="wrap view" id="v-portfolio">
+  <h1>Portfolio analytics</h1>
+  <p class="sub">Live queries over the unified datastore — demand shape for portfolio planning.</p>
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <div class="card" style="flex:1;min-width:130px;text-align:center;margin:0;padding:12px"><div style="font-size:22px;font-weight:700">7</div><div class="sub" style="margin:0;font-size:12px">Ideas to date</div></div>
+    <div class="card" style="flex:1;min-width:130px;text-align:center;margin:0;padding:12px"><div style="font-size:22px;font-weight:700">4</div><div class="sub" style="margin:0;font-size:12px">This month</div></div>
+    <div class="card" style="flex:1;min-width:130px;text-align:center;margin:0;padding:12px"><div style="font-size:22px;font-weight:700">67%</div><div class="sub" style="margin:0;font-size:12px">Approval rate</div></div>
+    <div class="card" style="flex:1;min-width:130px;text-align:center;margin:0;padding:12px"><div style="font-size:22px;font-weight:700">6.2d</div><div class="sub" style="margin:0;font-size:12px">Avg time to decision</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="card" style="margin:0"><h3>Submissions by business unit</h3>
+      <div class="bar"><span>Claims</span><i style="width:85%"></i><b>3</b></div>
+      <div class="bar"><span>Policy Services</span><i style="width:56%"></i><b>2</b></div>
+      <div class="bar"><span>HR</span><i style="width:28%"></i><b>1</b></div>
+      <div class="bar"><span>Loss Prevention</span><i style="width:28%"></i><b>1</b></div>
+      <div class="bar dim"><span>Underwriting</span><i style="width:2%"></i><b>0</b></div>
+    </div>
+    <div class="card" style="margin:0"><h3>By category</h3>
+      <div class="bar"><span>Automation</span><i style="width:85%"></i><b>3</b></div>
+      <div class="bar"><span>Classification</span><i style="width:56%"></i><b>2</b></div>
+      <div class="bar"><span>Conversational</span><i style="width:28%"></i><b>1</b></div>
+      <div class="bar"><span>Forecasting</span><i style="width:28%"></i><b>1</b></div>
+    </div>
+    <div class="card" style="margin:0"><h3>Capability demand (tech components)</h3>
+      <div class="bar"><span>LLM</span><i style="width:85%"></i><b>5</b></div>
+      <div class="bar"><span>API integration</span><i style="width:68%"></i><b>4</b></div>
+      <div class="bar"><span>Embedding search</span><i style="width:34%"></i><b>2</b></div>
+      <div class="bar"><span>OCR</span><i style="width:17%"></i><b>1</b></div>
+      <div style="font-size:11.5px;color:var(--slate);margin-top:8px">Vendor-agnostic rollup — same capability counted across different requested tools</div>
+    </div>
+    <div class="card" style="margin:0"><h3>Outcomes (board taxonomy)</h3>
+      <div class="bar"><span>Hub approved</span><i style="width:68%;background:var(--ok)"></i><b>2</b></div>
+      <div class="bar"><span>Hub denied</span><i style="width:34%;background:var(--warn)"></i><b>1</b></div>
+      <div class="bar"><span>Filtered: duplicate</span><i style="width:34%;background:var(--flag)"></i><b>1</b></div>
+      <div class="bar dim"><span>In review</span><i style="width:100%;background:var(--pending)"></i><b>3</b></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="toast-msg"></span></div>
 
 <script>
@@ -356,12 +445,14 @@
 const tabsByRole={
   submitter:[["home","My submissions"]],
   supervisor:[["home","My submissions"],["sup","Pending my sign-off",1]],
-  ea:[["home","My submissions"],["ea","EA review queue",3]]
+  ea:[["home","My submissions"],["ea","EA review queue",3]],
+  bp:[["home","My submissions"],["portfolio","Portfolio analytics"]],
+  coe:[["home","My submissions"],["allcases","All use cases"],["portfolio","Portfolio analytics"]]
 };
 let role='submitter';
 function setRole(r,btn){role=r;
   document.querySelectorAll('.role-switch button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
-  renderTabs();go(r==='supervisor'?'sup':r==='ea'?'ea':'home')}
+  renderTabs();go(r==='supervisor'?'sup':r==='ea'?'ea':r==='bp'?'portfolio':r==='coe'?'allcases':'home')}
 function renderTabs(){
   const el=document.getElementById('navtabs');el.innerHTML='';
   tabsByRole[role].forEach(([id,label,badge])=>{
@@ -461,6 +552,8 @@ function pickV(btn,cond){vPicked=true;
 function eaSubmit(){toast('Verdict recorded — workflow resumed','EAVerdictRecorded published');
   setTimeout(()=>go('ea'),1000)}
 
+function expandRow(id){const r=document.getElementById(id);
+  r.style.display=r.style.display==='none'?'flex':'none'}
 renderTabs();
 </script>
 </body>
