@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StateFund AI Idea Intake — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16233B; --ink:#1C2431; --slate:#5B6472; --line:#DCE1E8;
+    --paper:#F6F7F9; --card:#FFFFFF; --accent:#2F6FDE; --accent-ink:#1D4FA8;
+    --flag:#B45309; --flag-bg:#FDF6EC; --flag-line:#EBD9BC;
+    --ok:#177245; --ok-bg:#EDF7F0; --warn:#B3261E; --warn-bg:#FCEEED;
+    --pending:#6B7280; --pending-bg:#F1F2F4;
+    --r:10px; --r-sm:6px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);
+    font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  button{font-family:inherit}
+
+  /* ---------- chrome ---------- */
+  .topbar{background:var(--navy);color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;gap:16px}
+  .brand{font-weight:700;font-size:15px}
+  .brand small{display:block;font-weight:400;font-size:10.5px;opacity:.65;letter-spacing:.6px;text-transform:uppercase}
+  .spacer{flex:1}
+  .env-chip{font-size:10px;letter-spacing:.8px;text-transform:uppercase;background:rgba(255,255,255,.12);padding:3px 9px;border-radius:99px}
+  .role-switch{display:flex;gap:4px;background:rgba(255,255,255,.1);border-radius:99px;padding:3px}
+  .role-switch button{border:none;background:none;color:rgba(255,255,255,.7);font-size:11.5px;font-weight:600;
+    padding:5px 12px;border-radius:99px;cursor:pointer}
+  .role-switch button.on{background:#fff;color:var(--navy)}
+  .navtabs{background:#fff;border-bottom:1px solid var(--line);padding:0 24px;display:flex;gap:2px}
+  .navtabs button{border:none;background:none;padding:13px 16px;font-size:13.5px;font-weight:500;color:var(--slate);
+    cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .navtabs button:hover{color:var(--ink)}
+  .navtabs button.on{color:var(--accent-ink);border-bottom-color:var(--accent);font-weight:600}
+  .navtabs .badge{font-size:11px;background:var(--flag-bg);color:var(--flag);border-radius:99px;padding:1px 7px;margin-left:5px;font-weight:600}
+  .wrap{max-width:980px;margin:0 auto;padding:26px 24px 72px}
+  .view{display:none}.view.on{display:block}
+  h1{font-size:20px;font-weight:600;margin-bottom:4px}
+  .sub{color:var(--slate);font-size:13.5px;margin-bottom:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:14px}
+  .card h3{font-size:11.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--slate);margin-bottom:10px;font-weight:600}
+  .kv{display:grid;grid-template-columns:185px 1fr;gap:7px 18px;font-size:13.5px}
+  .kv dt{color:var(--slate)} .kv dd{font-weight:500}
+  .chip{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;padding:4px 11px;border-radius:99px;white-space:nowrap}
+  .chip.pending{background:var(--pending-bg);color:var(--pending)}
+  .chip.ok{background:var(--ok-bg);color:var(--ok)}
+  .chip.warn{background:var(--warn-bg);color:var(--warn)}
+  .chip.flag{background:var(--flag-bg);color:var(--flag)}
+  .btn{font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:var(--r-sm);border:1px solid transparent;cursor:pointer}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-ink)}
+  .btn.primary:disabled{background:#AEBFDA;cursor:not-allowed}
+  .btn.ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:#B9C4D4}
+  .btn.danger{background:#fff;border-color:#E5B7B4;color:var(--warn)}
+  .btn.danger:hover{background:var(--warn-bg)}
+  .crumb{font-size:13px;margin-bottom:14px}
+  .crumb a{color:var(--accent);cursor:pointer;text-decoration:none}
+  .crumb a:hover{text-decoration:underline}
+  .rowlist{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .row{display:flex;align-items:center;gap:16px;padding:15px 20px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row.click{cursor:pointer}
+  .row.click:hover{background:#FAFBFD}
+  .rtitle{font-weight:600}
+  .rtitle small{display:block;font-weight:400;color:var(--slate);font-size:12.5px;margin-top:1px}
+  label.f{display:block;font-size:12.5px;font-weight:600;margin:12px 0 5px}
+  label.f span{color:var(--warn)}
+  textarea,input[type=text]{width:100%;font-size:13.5px;padding:10px 12px;border:1px solid var(--line);
+    border-radius:var(--r-sm);background:#fff;color:var(--ink);font-family:inherit;resize:vertical}
+  textarea:focus,input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);opacity:0;
+    background:var(--navy);color:#fff;padding:12px 20px;border-radius:var(--r-sm);font-size:13.5px;
+    box-shadow:0 8px 28px rgba(22,35,59,.35);transition:all .28s;display:flex;gap:10px;align-items:center;z-index:50}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  .toast .mono{font-size:11px;opacity:.75}
+
+  /* ---------- home ---------- */
+  .empty{border:1.5px dashed var(--line);border-radius:var(--r);padding:44px 30px;text-align:center;background:#FBFCFD}
+  .empty h2{font-size:18px;font-weight:600;margin-bottom:6px}
+  .empty p{color:var(--slate);margin-bottom:18px}
+  .toggle-link{font-size:12px;color:var(--slate);margin-top:14px;display:inline-block;cursor:pointer;text-decoration:underline}
+
+  /* ---------- chat ---------- */
+  .chatbox{background:var(--card);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;height:600px}
+  .msgs{flex:1;overflow-y:auto;padding:22px}
+  .msg{max-width:78%;margin-bottom:14px;padding:11px 15px;border-radius:12px;font-size:14px}
+  .msg.agent{background:#F1F4F9;border-bottom-left-radius:3px}
+  .msg.user{background:var(--accent);color:#fff;margin-left:auto;border-bottom-right-radius:3px}
+  .divider{text-align:center;color:var(--slate);font-size:12px;margin:16px 0;letter-spacing:.3px}
+  .fcard{border:1px solid var(--flag-line);border-left:4px solid var(--flag);border-radius:var(--r-sm);
+    background:#fff;padding:14px 16px;margin:6px 0 14px;max-width:88%}
+  .fcard .head{display:flex;gap:9px;align-items:center;font-weight:600;font-size:13px;margin-bottom:8px;color:var(--flag)}
+  .fcard .cite{font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.6;background:#FAFAF8;
+    border:1px solid #EDECE6;border-radius:5px;padding:9px 11px;margin:6px 0;color:var(--ink)}
+  .fcard .because{font-size:12.5px;color:var(--slate);margin:6px 0 10px}
+  .fcard .acts{display:flex;gap:8px}
+  .fcard .acts button{font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:5px;cursor:pointer}
+  .fcard .a1{background:var(--accent);color:#fff;border:none}
+  .fcard .a2{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .inputbar{border-top:1px solid var(--line);padding:12px;display:flex;gap:10px}
+  .inputbar input{flex:1}
+  .typing{color:var(--slate);font-size:12.5px;padding:0 22px 10px}
+  /* completion */
+  .done-hero{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:30px;text-align:center;margin-bottom:14px}
+  .done-hero .big{font-size:19px;font-weight:600;margin:10px 0 4px}
+  .refnum{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--pending-bg);border-radius:5px;padding:4px 10px;display:inline-block;margin-top:6px}
+  .steps{display:flex;gap:0;justify-content:center;margin:22px 0 4px;font-size:12.5px;color:var(--slate)}
+  .step{padding:0 18px;position:relative}
+  .step:not(:last-child):after{content:"→";position:absolute;right:-7px;top:0;color:var(--line)}
+  .step b{display:block;color:var(--ink);font-size:12.5px}
+  .thumbs{display:flex;gap:10px;justify-content:center;margin-top:8px}
+  .thumbs button{font-size:19px;background:#fff;border:1px solid var(--line);border-radius:50%;width:44px;height:44px;cursor:pointer}
+  .thumbs button.sel{border-color:var(--accent);background:#F5F8FE}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">StateFund<small>AI Idea Intake</small></div>
+  <span class="env-chip">Demo · Synthetic data</span>
+  <div class="spacer"></div>
+  <div class="role-switch" title="Demo device: switch the signed-in persona">
+    <button class="on" onclick="setRole('submitter',this)">Submitter</button>
+    <button onclick="setRole('supervisor',this)">Supervisor</button>
+    <button onclick="setRole('ea',this)">EA Reviewer</button>
+  </div>
+</div>
+
+<div class="navtabs" id="navtabs"></div>
+
+<!-- ================= HOME / MY SUBMISSIONS ================= -->
+<div class="wrap view on" id="v-home">
+  <h1>My submissions</h1>
+  <p class="sub">Your AI use-case ideas and where each one is in review.</p>
+
+  <div id="home-list">
+    <div class="rowlist" style="margin-bottom:16px">
+      <div class="row click" onclick="toast('Read-only view of the submitted record would open')">
+        <div class="rtitle" style="flex:1">Claims correspondence triage assistant<small>Submitted Aug 12, 2026</small></div>
+        <span class="chip ok">Hub approved</span>
+      </div>
+      <div class="row click" onclick="toast('Read-only view + returned reasons would open')">
+        <div class="rtitle" style="flex:1">Automated low-dollar claim approval<small>Submitted Aug 24, 2026</small></div>
+        <span class="chip pending">Supervisor review pending</span>
+      </div>
+    </div>
+    <button class="btn primary" onclick="startChat()">+ New idea</button>
+    <br><span class="toggle-link" onclick="toggleEmpty(true)">demo: show first-time visitor view</span>
+  </div>
+
+  <div id="home-empty" style="display:none">
+    <div class="empty">
+      <div style="font-size:30px">💡</div>
+      <h2>Have an AI idea?</h2>
+      <p>Describe it in a short conversation — about 10 minutes.<br>It goes to your supervisor, then Enterprise Architecture, then the AI Hub.</p>
+      <button class="btn primary" onclick="startChat()">Start a new idea</button>
+    </div>
+    <span class="toggle-link" onclick="toggleEmpty(false)">demo: show returning visitor view</span>
+  </div>
+</div>
+
+<!-- ================= INTAKE CHAT ================= -->
+<div class="wrap view" id="v-chat">
+  <div class="crumb"><a onclick="go('home')">← My submissions</a></div>
+  <h1>New idea</h1>
+  <p class="sub">Signed in as <b>John Doe · Claims</b> — filled automatically, never asked.</p>
+  <div class="chatbox">
+    <div class="msgs" id="msgs"></div>
+    <div class="typing" id="typing" style="display:none">Assistant is typing…</div>
+    <div class="inputbar">
+      <input type="text" id="chat-in" placeholder="" readonly onclick="advance()">
+      <button class="btn primary" id="send" onclick="advance()">Send</button>
+    </div>
+  </div>
+  <p class="sub" style="margin-top:10px;font-size:12px">Demo: scripted conversation — click <b>Send</b> to play the next turn. Live version streams from the intake agent.</p>
+</div>
+
+<!-- ================= COMPLETION ================= -->
+<div class="wrap view" id="v-done">
+  <div class="done-hero">
+    <div style="font-size:30px">✓</div>
+    <div class="big">Your idea is submitted</div>
+    <div class="sub">Automated checks ran during our conversation — three items were noted for reviewers, with your responses attached.</div>
+    <span class="refnum">Ref 22345678-1234-5678</span>
+    <div class="steps">
+      <div class="step"><b>Supervisor</b>sign-off</div>
+      <div class="step"><b>Enterprise Architecture</b>1 business day</div>
+      <div class="step"><b>AI Hub</b>4 business days</div>
+    </div>
+  </div>
+  <div class="card" style="text-align:center">
+    <h3>How was this experience?</h3>
+    <div class="thumbs">
+      <button onclick="thumb(this)">👍</button>
+      <button onclick="thumb(this)">👎</button>
+    </div>
+  </div>
+  <div style="text-align:center"><button class="btn ghost" onclick="go('home')">Back to My submissions</button></div>
+</div>
+
+<!-- ================= SUPERVISOR ================= -->
+<div class="wrap view" id="v-sup">
+  <h1>Pending my sign-off</h1>
+  <p class="sub">Ideas from your unit awaiting your approval before review begins. Declining requires a reason — it's recorded and shared with the submitter.</p>
+  <div class="rowlist" id="sup-list">
+    <div class="row click" onclick="go('supdetail')">
+      <div class="rtitle" style="flex:1">Automated low-dollar claim approval<small>John Doe · submitted Aug 24 · awaiting you</small></div>
+      <span class="chip flag">3 flags</span>
+      <span style="color:var(--line)">›</span>
+    </div>
+  </div>
+  <div class="empty" id="sup-empty" style="display:none;margin-top:14px">
+    <h2>All caught up</h2><p>No ideas are waiting on you.</p>
+  </div>
+</div>
+
+<div class="wrap view" id="v-supdetail">
+  <div class="crumb"><a onclick="go('sup')">← Pending my sign-off</a></div>
+  <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:16px">
+    <div><h1>Automated low-dollar claim approval</h1>
+      <div class="sub" style="margin:0">John Doe · Claims · Aug 24, 2026 · <span class="mono" style="font-size:12px">22345678-1234-5678</span></div></div>
+    <span class="chip pending">Awaiting your sign-off</span>
+  </div>
+
+  <div class="card">
+    <h3>Summary</h3>
+    <p>Auto-approve workers' comp claims under $5,000 with no human review. Model ingests claim type, injury description, and cost estimates; approvals trigger payment directly. ~40% of volume cited as routine.</p>
+  </div>
+
+  <div class="card" style="border-left:4px solid var(--flag)">
+    <h3>Noted for reviewers (3) — raised during intake, submitter acknowledged each</h3>
+    <dl class="kv">
+      <dt class="mono" style="font-size:12px">AI-AP-01</dt><dd>PII in scope — claimant identifiable information & medical extracts</dd>
+      <dt class="mono" style="font-size:12px">AI-AP-02</dt><dd>External sharing + contract-restricted data (vendor document portal)</dd>
+      <dt class="mono" style="font-size:12px">AI-AP-03</dt><dd>Automated decisions in Claims — no human review point</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3>Full record</h3>
+    <dl class="kv">
+      <dt>Current process</dt><dd>Manual adjuster review, 48-hr average decision</dd>
+      <dt>AI role</dt><dd>Final approval decision + payment trigger</dd>
+      <dt>Human touchpoint</dt><dd>None — model decision is final</dd>
+      <dt>Requested tool</dt><dd>ClaimFlow AI (external vendor, specific-tool preference)</dd>
+      <dt>Expected benefit</dt><dd>Quantified: 46 hrs/week adjuster time (Q2 volume basis)</dd>
+      <dt>Affected groups</dt><dd>Claims adjusters · 51–250 · daily</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3>Your decision</h3>
+    <div style="display:flex;gap:10px;margin-bottom:6px">
+      <button class="btn primary" onclick="supApprove()">Approve — send to EA review</button>
+      <button class="btn danger" onclick="supDeclineToggle()">Decline</button>
+    </div>
+    <div id="sup-decline" style="display:none">
+      <label class="f">Reason for declining <span>*</span> <span style="color:var(--slate);font-weight:400">— recorded for audit, shared with the submitter</span></label>
+      <textarea rows="2" id="sup-reason" oninput="document.getElementById('sup-confirm').disabled=!this.value.trim()"></textarea>
+      <div style="margin-top:10px"><button class="btn danger" id="sup-confirm" disabled onclick="supDecline()">Confirm decline</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= EA ================= -->
+<div class="wrap view" id="v-ea">
+  <div style="display:flex;justify-content:space-between;align-items:baseline">
+    <h1>EA review queue</h1><span class="sub" style="margin:0">SLA: 1 business day · oldest first</span>
+  </div>
+  <p class="sub">Verdicts resume each idea's workflow. Flags carry verbatim citations from the governance ruleset.</p>
+  <div class="rowlist">
+    <div class="row" style="background:#FBFCFD;font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--slate);font-weight:600;padding:10px 20px">
+      <span style="width:104px">SLA</span><span style="flex:1">Idea</span><span style="width:140px">Business unit</span><span style="width:110px">Flags</span><span style="width:14px"></span>
+    </div>
+    <div class="row click">
+      <span style="width:104px"><span class="chip warn">Overdue 2h</span></span>
+      <div class="rtitle" style="flex:1">Safety training recommendations<small>arrived Aug 22</small></div>
+      <span style="width:140px;color:var(--slate)">Loss Prevention</span>
+      <span style="width:110px;color:var(--ok);font-weight:600;font-size:12.5px">0 ⚑ · 3 pend</span>
+      <span style="width:14px;color:var(--line)">›</span>
+    </div>
+    <div class="row click">
+      <span style="width:104px"><span class="chip flag">5h left</span></span>
+      <div class="rtitle" style="flex:1">Vendor risk enrichment APIs<small>arrived Aug 23</small></div>
+      <span style="width:140px;color:var(--slate)">Underwriting</span>
+      <span style="width:110px;color:var(--flag);font-weight:600;font-size:12.5px">1 ⚑ · 3 pend</span>
+      <span style="width:14px;color:var(--line)">›</span>
+    </div>
+    <div class="row click" onclick="go('eadetail')">
+      <span style="width:104px"><span class="chip ok">21h left</span></span>
+      <div class="rtitle" style="flex:1">Automated low-dollar claim approval<small>arrived Aug 24 · supervisor approved</small></div>
+      <span style="width:140px;color:var(--slate)">Claims</span>
+      <span style="width:110px;color:var(--flag);font-weight:600;font-size:12.5px">3 ⚑ · 3 pend</span>
+      <span style="width:14px;color:var(--line)">›</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap view" id="v-eadetail">
+  <div class="crumb"><a onclick="go('ea')">← Review queue</a></div>
+  <div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:16px">
+    <div><h1>Automated low-dollar claim approval</h1>
+      <div class="sub" style="margin:0">Claims · John Doe · Aug 24 · supervisor approved Aug 25 · <span class="mono" style="font-size:12px">22345678-1234-5678</span></div></div>
+    <span class="chip pending">EA review pending</span>
+  </div>
+
+  <div class="card" style="border:1px solid var(--flag-line);border-left:4px solid var(--flag)">
+    <h3>AI-AP-03 · deterministic</h3>
+    <div class="fcard" style="border:none;padding:0;margin:0;max-width:none">
+      <div class="cite">"AI cannot operate without human review. Automated decisions are prohibited for: Claims, Pricing, Employment, and Development of computer code."</div>
+      <div class="because">Matched: business_unit "Claims"; ai_outputs "auto-approval decision…" — output_reviewer: automated · <b style="color:var(--ink)">submitter acknowledged, proceeding</b></div>
+    </div>
+  </div>
+  <div class="card" style="border:1px solid var(--flag-line);border-left:4px solid var(--flag)">
+    <h3>AI-AP-01 + AI-AP-02 · deterministic</h3>
+    <p style="font-size:13px;color:var(--slate)">Claimant PII and contract-restricted data shared to an external vendor portal — full verbatim citations in the flags tab (abbreviated for demo). Governance Principles checks (GOV-02/03/04) pending LLM evaluation.</p>
+  </div>
+  <div class="card">
+    <h3>Similar prior submission</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="rtitle">Claims correspondence triage assistant<small>Claims Operations · Mar 2026 · human-reviewed design</small></div>
+      <div style="text-align:right"><span class="chip ok">Approved</span><div class="mono" style="font-size:11.5px;color:var(--slate);margin-top:5px">similarity 0.81</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Feasibility verdict</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+      <button class="btn ghost" onclick="pickV(this)">Feasible</button>
+      <button class="btn ghost" onclick="pickV(this,'cond')">Feasible with conditions</button>
+      <button class="btn ghost" onclick="pickV(this)">Not feasible</button>
+      <button class="btn ghost" onclick="pickV(this,'reuse')">Reuse existing</button>
+    </div>
+    <div id="ea-cond" style="display:none"><label class="f">Conditions <span>*</span></label><input type="text" placeholder="e.g. Human review checkpoint restored for all claim decisions"></div>
+    <div id="ea-reuse" style="display:none"><label class="f">Recommended existing idea <span>*</span></label><input type="text" placeholder="e.g. Claims correspondence triage assistant"></div>
+    <label class="f">Rationale <span>*</span></label>
+    <textarea rows="3" id="ea-rat" oninput="document.getElementById('ea-go').disabled=!(this.value.trim()&&vPicked)"></textarea>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:14px">
+      <button class="btn primary" id="ea-go" disabled onclick="eaSubmit()">Submit verdict</button>
+      <span class="mono" style="font-size:11px;color:var(--slate)">→ RaiseEvent(idea_id, verdict)</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<script>
+/* ---------- role + nav ---------- */
+const tabsByRole={
+  submitter:[["home","My submissions"]],
+  supervisor:[["home","My submissions"],["sup","Pending my sign-off",1]],
+  ea:[["home","My submissions"],["ea","EA review queue",3]]
+};
+let role='submitter';
+function setRole(r,btn){role=r;
+  document.querySelectorAll('.role-switch button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  renderTabs();go(r==='supervisor'?'sup':r==='ea'?'ea':'home')}
+function renderTabs(){
+  const el=document.getElementById('navtabs');el.innerHTML='';
+  tabsByRole[role].forEach(([id,label,badge])=>{
+    const b=document.createElement('button');
+    b.innerHTML=label+(badge?`<span class="badge">${badge}</span>`:'');
+    b.onclick=()=>go(id);b.dataset.v=id;el.appendChild(b)});
+  markTab('home')}
+function markTab(id){document.querySelectorAll('.navtabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===id))}
+function go(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('v-'+id).classList.add('on');
+  markTab(id==='supdetail'?'sup':id==='eadetail'?'ea':id);window.scrollTo(0,0)}
+function toggleEmpty(e){document.getElementById('home-list').style.display=e?'none':'block';
+  document.getElementById('home-empty').style.display=e?'block':'none'}
+function toast(m,mono){const t=document.getElementById('toast');
+  document.getElementById('toast-msg').innerHTML=m+(mono?` <span class="mono">${mono}</span>`:'');
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
+
+/* ---------- scripted chat ---------- */
+const script=[
+  {a:"Hi John — tell me about your AI idea in your own words."},
+  {u:"We should auto-approve workers comp claims under $5,000. Most are routine — model checks them against policy rules and pays them out automatically."},
+  {a:"Got it. So: a model that automatically approves and pays qualifying low-dollar claims, with the goal of cutting decision time on routine volume — did I get that right?"},
+  {u:"Exactly. About 40% of our volume."},
+  {div:"— several questions later: process, data, outputs —"},
+  {a:"You mentioned the model reads claimant files. Does that data include personally identifiable information — names, medical details, payment history?"},
+  {u:"Yes — claimant PII, medical bill extracts, payment history. Some of it goes through our external document review vendor too."},
+  {flag:{rule:"AI-AP-01 · AI Appetite",
+    cite:'"State Fund confidential and proprietary information should only be used in private AI models managed by State Fund. This includes Personally Identifiable Information (PII)…"',
+    because:"Applies because you mentioned: claimant PII and medical extracts, shared with an external vendor."}},
+  {a:"And the approval decision itself — is a person reviewing the model's output, is it fully automated, or a mix?"},
+  {u:"Fully automated — that's the whole point, no human in the loop."},
+  {flag:{rule:"AI-AP-03 · AI Appetite",
+    cite:'"AI cannot operate without human review. Automated decisions are prohibited for: Claims, Pricing, Employment, and Development of computer code."',
+    because:"Applies because: automated approval decisions in Claims."}},
+  {a:"All noted with your responses — reviewers will see both the items and how you answered. Last step: please confirm you're familiar with StateFund's foundational AI principles (linked on Worksite)."},
+  {u:"Confirmed."},
+  {a:"That's everything. Here's your summary…",done:true}
+];
+let step=0, chatStarted=false;
+function startChat(){go('chat');
+  if(!chatStarted){chatStarted=true;playNext()}}
+function advance(){playNext()}
+function playNext(){
+  if(step>=script.length)return;
+  const s=script[step];const box=document.getElementById('msgs');
+  if(s.div){box.insertAdjacentHTML('beforeend',`<div class="divider">${s.div}</div>`);step++;playNext();return}
+  if(s.flag){box.insertAdjacentHTML('beforeend',flagCard(s.flag));box.scrollTop=box.scrollHeight;step++;setInput();return}
+  if(s.a){typing(()=>{box.insertAdjacentHTML('beforeend',`<div class="msg agent">${s.a}</div>`);
+    box.scrollTop=box.scrollHeight;step++;
+    if(s.done){setTimeout(()=>go('done'),1200)}
+    else if(script[step]&&(script[step].a||script[step].div||script[step].flag)){playNext()}else setInput()});return}
+  if(s.u){box.insertAdjacentHTML('beforeend',`<div class="msg user">${s.u}</div>`);
+    box.scrollTop=box.scrollHeight;step++;document.getElementById('chat-in').value='';playNext()}
+}
+function setInput(){const next=script[step];
+  document.getElementById('chat-in').value=next&&next.u?next.u:''}
+function typing(fn){const t=document.getElementById('typing');t.style.display='block';
+  setTimeout(()=>{t.style.display='none';fn()},450)}
+function flagCard(f){return `
+  <div class="fcard">
+    <div class="head">⚑ Reviewers will look at this <span class="mono" style="font-weight:500;font-size:11px;color:var(--slate)">${f.rule}</span></div>
+    <div class="cite">${f.cite}</div>
+    <div class="because">${f.because}</div>
+    <div class="acts">
+      <button class="a1" onclick="flagBtn(this,'I\\'d like to adjust that answer.')">Adjust my answer</button>
+      <button class="a2" onclick="flagBtn(this,'Understood — note it and continue.')">Note it &amp; continue</button>
+    </div>
+  </div>`}
+function flagBtn(btn,msg){
+  const box=document.getElementById('msgs');
+  btn.closest('.acts').innerHTML=`<span style="font-size:12px;color:var(--slate)">Response recorded → envelope</span>`;
+  box.insertAdjacentHTML('beforeend',`<div class="msg user">${msg}</div>`);
+  if(msg.startsWith("I'd")){box.insertAdjacentHTML('beforeend',
+    `<div class="msg agent">Of course — in the live agent we'd revisit that topic now. (Demo continues.)</div>`)}
+  box.scrollTop=box.scrollHeight;playNext()}
+function thumb(b){document.querySelectorAll('.thumbs button').forEach(x=>x.classList.remove('sel'));
+  b.classList.add('sel');toast('Feedback recorded — thanks!','stored with transcript')}
+
+/* ---------- supervisor ---------- */
+function supDeclineToggle(){const d=document.getElementById('sup-decline');
+  d.style.display=d.style.display==='none'?'block':'none'}
+function supApprove(){toast('Approved — sent to EA review','SupervisorDecision → orchestration resumed');supDone()}
+function supDecline(){toast('Declined — reason recorded, submitter notified','returned_to_submitter');supDone()}
+function supDone(){setTimeout(()=>{go('sup');
+  document.getElementById('sup-list').style.display='none';
+  document.getElementById('sup-empty').style.display='block'},900)}
+
+/* ---------- EA ---------- */
+let vPicked=false;
+function pickV(btn,cond){vPicked=true;
+  document.querySelectorAll('#v-eadetail .btn.ghost').forEach(b=>{b.style.borderColor='';b.style.background=''});
+  btn.style.borderColor='var(--accent)';btn.style.background='#F5F8FE';
+  document.getElementById('ea-cond').style.display=cond==='cond'?'block':'none';
+  document.getElementById('ea-reuse').style.display=cond==='reuse'?'block':'none';
+  const r=document.getElementById('ea-rat');document.getElementById('ea-go').disabled=!(r.value.trim())}
+function eaSubmit(){toast('Verdict recorded — workflow resumed','EAVerdictRecorded published');
+  setTimeout(()=>go('ea'),1000)}
+
+renderTabs();
+</script>
+</body>
+</html>
