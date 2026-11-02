@@ -1,97 +1,36 @@
-# AI Idea Intake Pipeline
+# Prompt for repo coding agent — session-day prep report
 
-From static form to conversation: an AI-assisted intake and triage pipeline for AI use-case ideas at State Fund. A conversational agent completes a rigid, versioned intake record; governance rules flag issues **during** the conversation with verbatim citations; ideas are deduplicated against history; and every decision is made by a human — supervisor, then Enterprise Architecture, then the AI Hub.
-
-**The rule that governs everything here: the AI retrieves, flags, and cites — humans decide.**
+Copy everything below the line into the agent chat (Agent mode, repo root as context). It produces a report — it should NOT edit code.
 
 ---
 
-## Status at a glance
+You are working in the `intake-pipeline` repository (C#/.NET 8+, Azure-targeted AI intake/governance pipeline). Today I have a 2-hour provisioning session where the following Azure resources will be created and connected: **Azure OpenAI (one chat deployment + one embeddings deployment), Azure SQL Database, a Function App + storage account, Azure Functions Core Tools + Azurite installed locally, and Azure AI Foundry access.**
 
-| Piece | State |
-|---|---|
-| Intake record + envelope schemas (JSON Schema, versioned) | ✅ built, validated |
-| Governance ruleset + deterministic rules engine (AP-01/02/03, cited flags) | ✅ built, tested |
-| End-to-end pipeline runner (validate → flag → seal, self-validating envelopes) | ✅ built — `.\demo.ps1` |
-| Test suite (round-trip, persona-based rules tests, null tri-state) | ✅ green |
-| Interactive UI demo (5 roles, scripted intake chat, flag cards) | ✅ built — open `ui-demo/intake-demo-full.html` |
-| Data layer design (Azure SQL DDL + repository interfaces + dev stubs) | ✅ designed; SQL impl pending instance |
-| Intake agent + judgment-check prompts (rev D confirmed) | ✅ written, versioned |
-| Durable Functions orchestrator | ⏳ next build — gated on Core Tools/Azurite install |
-| LLM checks (GOV-02/03/04), embeddings dedupe | ⏳ seams built; gated on Azure OpenAI |
-| Real persistence | ⏳ gated on Azure SQL instance |
-| Live agent (Foundry), OneTrust write-back, Oro export | 🔭 integration phase |
+**Do not modify any files.** Produce a single markdown report called **SESSION-PREP.md** content (output it in chat) with the sections below. Every claim must cite an exact `path:line` you verified by reading the actual file — if something I believe exists doesn't, say so explicitly rather than inventing it.
 
-**Where every pending piece plugs in:** see [`docs/integration-map.md`](docs/integration-map.md) — per-resource seams, files, config, and verification steps.
+## Section 1 — Pre-session fixes (blockers for persisting valid data)
+Verify each suspected issue and give me: confirmed/not-confirmed, exact location(s), the minimal fix, and the test that proves it:
+1. `stack_match` vs `assessment_status` mismatch between `schema/intake-record.v11.json` (tech_components definition) and the C# domain model — confirm whether a round-trip drops or renames a schema-required property.
+2. Envelopes stamping an empty `ruleset_version` — find where the ruleset file's version lives vs. where the loader reads it, and where PipelineRunner writes the envelope's versions block.
+3. Any place the literal filename typo `evelope` appears (code, scripts, fixtures).
+4. Any *string values* (not comments) containing typos that would fossilize into data or events — especially event-type strings like `IdeaSumitted`.
+5. Untracked/ignored-file hygiene: anything like `debug.log` that should be gitignored.
 
----
+## Section 2 — Exact plug-in locations for each resource landing today
+For each resource, give a table: **seam (path:line) · what gets added/changed there · config/env var name expected · the verification command/test to run the moment the resource exists.** Ground every row in the actual code:
+- **Azure OpenAI chat** → the llm_judged seam: where pending llm rules are surfaced (rules engine), where the judgment-check prompt file lives, where PipelineRunner records `ChatModelVersion`/pending placeholders, where a new JudgmentCheckClient would be called from.
+- **Azure OpenAI embeddings** → the vector seam: the IVectorRepository contract, the envelope fields it populates (embedding_ref, similar_ideas, dedupe_threshold_used), where EmbeddingModelVersion is stamped, and what in `db/` depends on the embedding dimension.
+- **Azure SQL** → the persistence seam: every repository interface and its FileSystem stub counterpart, which schema file is the authoritative DDL to run (flag if more than one schema file exists and which targets which engine), and where a SqlRepositories implementation would register.
+- **Core Tools/Azurite → orchestrator**: confirm whether any orchestrator project exists yet; identify the status-machine documentation section that defines the states/waits it must implement; list the existing classes/methods its activities would call (validation, rules evaluation, envelope construction, repositories).
+- **Foundry** → the agent seam: the agent prompt file, and the existing code that `check_rules` / `find_similar` tool endpoints would wrap.
 
-## Quick start
+## Section 3 — Config inventory
+List every env var / setting name the codebase (or its docs) already expects for these integrations, with where each is referenced. Flag any naming inconsistencies between docs and code (e.g., placeholder strings that differ).
 
-```powershell
-# validate any record against the intake schema
-dotnet run --project src\SchemaValidator -- schema\intake-record.v11.json testdata\valid-record.json
+## Section 4 — Smoke verification sequence
+An ordered checklist of commands to run during the session as each resource lands (build/test commands that already exist in this repo, plus the gaps where no verification exists yet).
 
-# run the test suite
-dotnet test src\Tests
+## Section 5 — Anything else inconsistent
+Brief: anything you noticed while reading that would embarrass us mid-session (broken references, stale docs contradicting code, solution-file issues). Max 10 items, one line each, with locations.
 
-# the three-beat demo: flags+citations / clean+unsure / rejection
-.\demo.ps1
-
-# the UI walkthrough (no install — opens in any browser)
-ui-demo\intake-demo-full.html
-```
-
-The demo's kitchen-sink record deliberately trips all three deterministic governance rules — watch for verbatim rule text and the submitter's own words in each flag, and the honest `llm_judged pending` line marking the Azure OpenAI seam.
-
----
-
-## Repository layout
-
-```
-schema/     intake-record.v11.json, system-envelope.v1.json — the data contracts (JSON Schema 2020-12)
-rules/      ruleset.v1.json — governance rules: 3 active deterministic (AI-AP-*), 3 active llm_judged (AI-GOV-*)
-prompts/    intake-agent.v2.md (confirmed build target), judgment-check.v1.md — versioned LLM prompts
-docs/       status-machine.md (rev D — THE workflow spec), ui-design.v1.md, hub-sliver.v1.md,
-            integration-map.md (per-resource wiring guide)
-db/         schema.sql — Azure SQL DDL: JSON docs + promoted columns, outbox, per-consumer idempotency
-testdata/   fixtures (valid / clean / unsure / kitchen-sink / broken) + personas.v1.md (20+2 test personas)
-ui-demo/    intake-demo-full.html — self-contained 5-role interactive demo
-src/
-  SchemaValidator/   CLI: validate any JSON against any schema, exact error pointers
-  Domain/            POCOs mirroring the schemas (IntakeRecord, SystemEnvelope)
-  Rules/             ruleset loader + deterministic rules engine (null-safe tri-state)
-  Tests/             xUnit: round-trips, persona-shaped rules tests
-  PipelineRunner/    end-to-end: validate → flag → sealed, version-stamped envelope (self-validated)
-  Data/              repository interfaces + filesystem dev stubs (devstore/); SQL impl pending
-demo.ps1    the three-beat runnable demo
-```
-
-## Design decisions worth knowing (details in each artifact)
-
-- **Documents + promoted columns** (db/schema.sql): records/envelopes stored as validated JSON; only hot-path fields are real columns — schema revs never force migrations.
-- **Deterministic first, LLM second:** highest-stakes rules are plain C# (zero variance, asked explicitly); principle-level rules are LLM-judged with **byte-exact citation verification** — a flag whose quote doesn't match is rejected.
-- **"Not sure" is a tri-state null**, never a violation — it routes to an open question (tested: the P09 persona).
-- **Flags inform, never block.** No idea is stopped by automation; submitter responses to flags travel to every reviewer.
-- **Outbox + per-consumer idempotency** (`(event_id, consumer)` PK): status writes and their events commit together; duplicate event deliveries no-op.
-- **Human-confirmed dedupe only** (Hub decision): the system surfaces similar ideas; only people close ideas as duplicates.
-- **Every envelope stamps versions** (schema, prompt, model, ruleset) — any flag can be re-derived.
-- **Known gap, disclosed:** AI-AP-03 triggers on the submitter's business_unit, not the decision domain (fix specced; persona P12 flips when fixed).
-
-## Workflow (rev D — confirmed)
-
-`intake_in_progress → submitted → sealing → supervisor_review_pending → ea_review_pending → hub_review_pending → hub_approved | hub_denied`, with `returned_to_submitter` loops on every decline (revisions are new, linked submissions via `revised_from`), `withdrawn` from any non-terminal state, and `filtered_pre_hub(duplicate | ea_declined | supervisor_declined | pre_approved)` early exits. Full spec, SLAs (EA 1d + Hub 4d working values), and the Durable Functions mapping: [`docs/status-machine.md`](docs/status-machine.md).
-
-## Milestone tags
-
-- `spec-complete-v1` — schemas, ruleset, prompts, status machine as reviewed artifacts
-- `prototype-tier1-v1` — working end-to-end governance pipeline (the demo)
-
-## Next
-
-1. **Orchestrator** (on Core Tools landing): transcribe status-machine §5 into Durable Functions — activities call the existing engine/repositories
-2. **Judgment-check wiring** (on Azure OpenAI): the most self-contained integration; kills the "pending" line
-3. **SQL repositories** (on the Azure SQL instance): swap for the filesystem stubs via the existing interfaces
-4. **Embeddings dedupe** → **Foundry agent** → integration phase
-
-Per-step details, asks, and tripwires: [`docs/integration-map.md`](docs/integration-map.md).
+Keep the whole report tight and scannable — tables over prose. Accuracy over completeness: a verified `path:line` is worth ten guesses.
