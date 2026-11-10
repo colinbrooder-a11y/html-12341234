@@ -1,36 +1,30 @@
-# Prompt for repo coding agent — session-day prep report
+Branch: chore/local-settings-template, created from main.
 
-Copy everything below the line into the agent chat (Agent mode, repo root as context). It produces a report — it should NOT edit code.
+Goal: provide a placeholder local.settings.json template with the required keys, and make sure real values can never be committed.
 
----
+Steps:
+1. Check whether a local.settings.json already exists in the repo. Do not read or print its values if it contains real secrets. Report only whether it exists and whether git tracks it (git ls-files).
+2. Create local.settings.example.json at the repo root (or in src/PipelineRunner if that is where the Function App settings live; report which location you chose and why) with this structure:
 
-You are working in the `intake-pipeline` repository (C#/.NET 8+, Azure-targeted AI intake/governance pipeline). Today I have a 2-hour provisioning session where the following Azure resources will be created and connected: **Azure OpenAI (one chat deployment + one embeddings deployment), Azure SQL Database, a Function App + storage account, Azure Functions Core Tools + Azurite installed locally, and Azure AI Foundry access.**
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "AOAI_ENDPOINT": "https://<your-resource>.openai.azure.com/",
+    "AOAI_CHAT_DEPLOYMENT": "<chat-deployment-name>",
+    "AOAI_EMBED_DEPLOYMENT": "<embedding-deployment-name>",
+    "SQL_CONNECTION": "Server=tcp:<server>.database.windows.net,1433;Database=<db>;Authentication=Active Directory Default;Encrypt=True;"
+  }
+}
 
-**Do not modify any files.** Produce a single markdown report called **SESSION-PREP.md** content (output it in chat) with the sections below. Every claim must cite an exact `path:line` you verified by reading the actual file — if something I believe exists doesn't, say so explicitly rather than inventing it.
+   Placeholders must be obviously fake. Do not put any real endpoint, key, or connection string in this file.
+3. Ensure ignore rules: add local.settings.json to .gitignore if it is not already there. Verify with git check-ignore -v local.settings.json.
+4. Do not add AOAI_API_KEY to the template. Note in the report that key auth is optional and should come from the environment or Key Vault, not a file.
+5. Document the keys in a short README section or in the example file's sibling README.md, with one line per key describing what it is.
 
-## Section 1 — Pre-session fixes (blockers for persisting valid data)
-Verify each suspected issue and give me: confirmed/not-confirmed, exact location(s), the minimal fix, and the test that proves it:
-1. `stack_match` vs `assessment_status` mismatch between `schema/intake-record.v11.json` (tech_components definition) and the C# domain model — confirm whether a round-trip drops or renames a schema-required property.
-2. Envelopes stamping an empty `ruleset_version` — find where the ruleset file's version lives vs. where the loader reads it, and where PipelineRunner writes the envelope's versions block.
-3. Any place the literal filename typo `evelope` appears (code, scripts, fixtures).
-4. Any *string values* (not comments) containing typos that would fossilize into data or events — especially event-type strings like `IdeaSumitted`.
-5. Untracked/ignored-file hygiene: anything like `debug.log` that should be gitignored.
+Constraints:
+- Do not modify any file in db/, src/Domain/, or schema/.
+- Do not stage or commit the real local.settings.json if it exists.
+- Do not touch the uncommitted changes to README.md, docs/, or src/ files already in the working tree. If the README needs the new section, report the change and do not write it to README.md; put it in a new file instead.
 
-## Section 2 — Exact plug-in locations for each resource landing today
-For each resource, give a table: **seam (path:line) · what gets added/changed there · config/env var name expected · the verification command/test to run the moment the resource exists.** Ground every row in the actual code:
-- **Azure OpenAI chat** → the llm_judged seam: where pending llm rules are surfaced (rules engine), where the judgment-check prompt file lives, where PipelineRunner records `ChatModelVersion`/pending placeholders, where a new JudgmentCheckClient would be called from.
-- **Azure OpenAI embeddings** → the vector seam: the IVectorRepository contract, the envelope fields it populates (embedding_ref, similar_ideas, dedupe_threshold_used), where EmbeddingModelVersion is stamped, and what in `db/` depends on the embedding dimension.
-- **Azure SQL** → the persistence seam: every repository interface and its FileSystem stub counterpart, which schema file is the authoritative DDL to run (flag if more than one schema file exists and which targets which engine), and where a SqlRepositories implementation would register.
-- **Core Tools/Azurite → orchestrator**: confirm whether any orchestrator project exists yet; identify the status-machine documentation section that defines the states/waits it must implement; list the existing classes/methods its activities would call (validation, rules evaluation, envelope construction, repositories).
-- **Foundry** → the agent seam: the agent prompt file, and the existing code that `check_rules` / `find_similar` tool endpoints would wrap.
-
-## Section 3 — Config inventory
-List every env var / setting name the codebase (or its docs) already expects for these integrations, with where each is referenced. Flag any naming inconsistencies between docs and code (e.g., placeholder strings that differ).
-
-## Section 4 — Smoke verification sequence
-An ordered checklist of commands to run during the session as each resource lands (build/test commands that already exist in this repo, plus the gaps where no verification exists yet).
-
-## Section 5 — Anything else inconsistent
-Brief: anything you noticed while reading that would embarrass us mid-session (broken references, stale docs contradicting code, solution-file issues). Max 10 items, one line each, with locations.
-
-Keep the whole report tight and scannable — tables over prose. Accuracy over completeness: a verified `path:line` is worth ten guesses.
+Report: whether local.settings.json exists and is tracked, the path of the example file, the output of git check-ignore -v local.settings.json, and the git status --short output.
